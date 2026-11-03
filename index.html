@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EKSA VPN Admin</title>
+<style>
+body{font:16px system-ui;margin:0;background:#f4f7f5;color:#183126}header{background:#087d43;color:white;padding:18px 5%}
+main{max-width:900px;margin:24px auto;padding:18px}.card{background:white;padding:20px;border-radius:14px;margin:14px 0;box-shadow:0 2px 12px #0001}
+input,button{padding:12px;margin:5px;border:1px solid #ccd8d0;border-radius:8px}button{background:#087d43;color:white;cursor:pointer}
+small{color:#63756b}.row{display:flex;flex-wrap:wrap;gap:8px}
+</style></head>
+<body><header><h2>EKSA VPN — Admin Panel</h2><span>English / বাংলা</span></header>
+<main>
+<div class="card"><h3>Admin login / অ্যাডমিন লগইন</h3>
+<div class="row"><input id="email" placeholder="Admin email"><input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button></div><small id="status">API: http://localhost:8000</small></div>
+<div class="card"><h3>Users / ব্যবহারকারী</h3><button onclick="loadUsers()">Refresh users</button><pre id="users">Login first.</pre></div>
+<div class="card"><h3>Create user / নতুন ইউজার</h3>
+<div class="row"><input id="newemail" placeholder="User email"><input id="newpass" placeholder="Temporary password (12+ chars)">
+<input id="quota" type="number" placeholder="Quota bytes"><input id="expiry" type="datetime-local">
+<button onclick="createUser()">Create</button></div></div>
+</main>
+<script>
+const API='http://localhost:8000'; let token='';
+async function login(){let f=new URLSearchParams();f.set('username',email.value);f.set('password',password.value);
+let r=await fetch(API+'/auth/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:f});
+let d=await r.json();if(!r.ok){status.textContent=d.detail||'Login failed';return}token=d.access_token;status.textContent='Logged in';loadUsers();}
+async function loadUsers(){let r=await fetch(API+'/admin/users',{headers:{Authorization:'Bearer '+token}});users.textContent=JSON.stringify(await r.json(),null,2);}
+async function createUser(){let payload={email:newemail.value,password:newpass.value,quota_bytes:Number(quota.value||0),expires_at:expiry.value?new Date(expiry.value).toISOString():null};
+let r=await fetch(API+'/admin/users',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(payload)});
+status.textContent=JSON.stringify(await r.json());loadUsers();}
+</script></body></html>
